@@ -1,0 +1,96 @@
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import seaborn as sns
+import matplotlib
+import matplotlib.pyplot as plt
+
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+df = pd.read_csv('car_prices.csv')
+print('Dataset has ',df.shape[0],' records and ',df.shape[1], ' columns' )
+print(' ')
+df.head(10) # head shows the first 10 rows by default
+
+df = pd.read_csv('car_prices.csv')
+print('Dataset has ',df.shape[0],' records and ',df.shape[1], ' columns' )
+print(' ')
+df.head(10) # head shows the first 10 rows by default
+
+df.describe()
+
+df.year.unique()
+
+df.transmission.unique()
+
+wrong_df_1=df[df.transmission=='sedan']
+wrong_df_2=df[df.transmission=='Sedan']
+wrong_df_1.head(3)
+
+df.body.unique()
+
+wrong_df=pd.concat([wrong_df_1,wrong_df_2],axis=0).copy()
+wrong_df.head(3)
+
+for i in range(4,len(wrong_df.columns)-1):
+    wrong_df[wrong_df.columns[i]]=wrong_df[wrong_df.columns[i+1]]
+wrong_df.saledate=None
+wrong_df.head(5)
+
+modified_indices=wrong_df.index
+modified_indices
+
+df.loc[modified_indices]=wrong_df;
+df.transmission.unique()
+df['saledate'] = pd.to_datetime(df['saledate'],utc=True)
+# df['year'] = df.dt.year
+df['saleyear']=df['saledate'].dt.year
+df['sale_month']=df['saledate'].dt.month
+
+df[df.year>df.saleyear].index
+
+df
+
+df.drop(df[df.year>df.saleyear].index,inplace=True)
+
+df.drop('vin',inplace=True, axis=1)
+
+df.reset_index(inplace=True)
+
+vehicle_df=df.copy()
+
+vehicle_df.head(10)
+
+vehicle_df.drop_duplicates(inplace=True)
+
+vehicle_df.isna().sum()
+
+for i in range(0,len(vehicle_df.columns)):
+    column_name=vehicle_df.columns[i]
+    column_unique_ele_count=vehicle_df[vehicle_df.columns[i]].nunique()
+    print(column_name," ",column_unique_ele_count)
+
+#replacing the nan values of transmission column with unknown
+vehicle_df['transmission'].fillna('unknown', inplace=True)
+vehicle_df.transmission.unique()
+
+vehicle_df.info()
+
+# Converting the sellingprice to numeric column
+pd.to_numeric(vehicle_df['sellingprice'], errors='coerce')
+
+# Drop rows where 'column1' and 'column2' contain null values
+vehicle_df.dropna(subset=['mmr','sellingprice','saledate','saleyear','sale_month'], inplace=True)
+# Calculate the percentage of null values in each column
+null_percentage = (vehicle_df.isnull().sum() / len(vehicle_df)) * 100
+# Display the result
+print(null_percentage)
+
+vehicle_df.describe()
+
+vehicle_df.to_csv('cleaned_data.csv')
